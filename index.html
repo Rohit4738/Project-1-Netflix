@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
+        
+        @keyframes ripple {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(4); opacity: 0; }
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+        
+        .animate-slideIn {
+            animation: slideIn 0.3s ease-out forwards;
+        }
+        
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .ripple-effect:after {
+            content: "";
+            display: block;
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+            background-repeat: no-repeat;
+            background-position: 50%;
+            transform: scale(10, 10);
+            opacity: 0;
+            transition: transform .5s, opacity 1s;
+        }
+        
+        .ripple-effect:active:after {
+            transform: scale(0, 0);
+            opacity: 0.3;
+            transition: 0s;
+        }
+        
+        .skeleton {
+            background: linear-gradient(90deg, #2d2d2d 25%, #3d3d3d 50%, #2d2d2d 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .content-slider {
+            scroll-snap-type: x mandatory;
+            scroll-behavior: smooth;
+        }
+        
+        .content-slider::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .content-item {
+            scroll-snap-align: start;
+            flex: 0 0 auto;
+        }
+        
+        .hero-banner {
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.8) 100%);
+        }
+        
+        .modal-overlay {
+            background: rgba(0,0,0,0.9);
+        }
+        
+        .search-overlay {
+            background: rgba(0,0,0,0.95);
+        }
+        
+        .nav-active {
+            color: #e50914;
+            transform: scale(1.1);
+        }
+        
+        .heart-animation {
+            transition: all 0.3s ease;
+        }
+        
+        .heart-animation.active {
+            color: #e50914;
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-black text-white relative pb-16">
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-b from-black to-transparent p-4 flex justify-between items-center">
+        <div class="text-red-600 font-bold text-2xl">NETFLIX</div>
+        <div class="flex space-x-4">
+            <button id="search-btn" class="text-white">
+                <i class="fas fa-search text-xl"></i>
+            </button>
+            <button class="w-8 h-8 bg-red-600 rounded"></button>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="mt-16">
+        <!-- Hero Banner -->
+        <section class="hero-banner relative h-64 w-full flex items-end mb-6">
+            <img src="https://image.tmdb.org/t/p/w1280/9dKCd55IuTT5QRs989m9Qlb7dMO.jpg" alt="Hero Banner" class="absolute inset-0 w-full h-full object-cover -z-10">
+            <div class="p-4 w-full">
+                <h1 class="text-2xl font-bold mb-2">Stranger Things</h1>
+                <div class="flex space-x-2">
+                    <span class="text-sm">98% Match</span>
+                    <span class="text-sm">2016</span>
+                    <span class="text-sm">4 Seasons</span>
+                </div>
+                <div class="flex mt-4 space-x-3">
+                    <button class="bg-white text-black px-4 py-1 rounded flex items-center ripple-effect">
+                        <i class="fas fa-play mr-2"></i> Play
+                    </button>
+                    <button class="bg-gray-700 bg-opacity-70 text-white px-4 py-1 rounded flex items-center ripple-effect">
+                        <i class="fas fa-info-circle mr-2"></i> Info
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Content Rows -->
+        <div class="space-y-6 px-4">
+            <!-- Trending Now -->
+            <section>
+                <h2 class="text-lg font-bold mb-3">Trending Now</h2>
+                <div class="content-slider flex overflow-x-auto space-x-3 pb-2">
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQHXCZ4YgOJ.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie1')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie2')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie3')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/1LRLLWGvs5STZd7j3zIDKvZfXzr.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie4')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/9dKCd55IuTT5QRs989m9Qlb7dMO.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie5')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Top Picks -->
+            <section>
+                <h2 class="text-lg font-bold mb-3">Top Picks for You</h2>
+                <div class="content-slider flex overflow-x-auto space-x-3 pb-2">
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/5bFK5d3mVTAvBCXi5NPWH0tYjKl.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie6')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/6XYQTmQpIkM2oeu2QwJS6P2qzfQ.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie7')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie8')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQHXCZ4YgOJ.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie9')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie10')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- New Releases -->
+            <section>
+                <h2 class="text-lg font-bold mb-3">New Releases</h2>
+                <div class="content-slider flex overflow-x-auto space-x-3 pb-2">
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/1LRLLWGvs5STZd7j3zIDKvZfXzr.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie11')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/9dKCd55IuTT5QRs989m9Qlb7dMO.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie12')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/5bFK5d3mVTAvBCXi5NPWH0tYjKl.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie13')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/6XYQTmQpIkM2oeu2QwJS6P2qzfQ.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie14')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <button class="absolute top-2 right-2 text-white heart-animation" onclick="toggleWatchlist(this, 'movie15')">
+                            <i class="far fa-heart text-xl"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Continue Watching -->
+            <section>
+                <h2 class="text-lg font-bold mb-3">Continue Watching</h2>
+                <div class="content-slider flex overflow-x-auto space-x-3 pb-2">
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/1pdfLvkbY9ohJlCjQHXCZ4YgOJ.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-600">
+                            <div class="h-full bg-red-600" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/8Vt6mWEReuy4Of61Lnj5Xj704m8.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-600">
+                            <div class="h-full bg-red-600" style="width: 30%"></div>
+                        </div>
+                    </div>
+                    <div class="content-item w-32 flex-shrink-0 relative">
+                        <img src="https://image.tmdb.org/t/p/w500/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg" alt="Movie" class="w-full h-48 rounded object-cover">
+                        <div class="absolute bottom-0 left-0 right-0 h-1 bg-gray-600">
+                            <div class="h-full bg-red-600" style="width: 80%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-black bg-opacity-90 border-t border-gray-800 flex justify-around items-center h-16 z-50">
+        <a href="#" class="flex flex-col items-center text-white nav-active">
+            <i class="fas fa-home text-xl"></i>
+            <span class="text-xs mt-1">Home</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <i class="fas fa-search text-xl"></i>
+            <span class="text-xs mt-1">Search</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <i class="fas fa-bookmark text-xl"></i>
+            <span class="text-xs mt-1">Watchlist</span>
+        </a>
+        <a href="#" class="flex flex-col items-center text-gray-400">
+            <i class="fas fa-user text-xl"></i>
+            <span class="text-xs mt-1">Profile</span>
+        </a>
+    </nav>
+
+    <!-- Movie Detail Modal -->
+    <div id="movie-modal" class="fixed inset-0 z-50 modal-overlay hidden animate-fadeIn overflow-y-auto">
+        <div class="relative min-h-screen">
+            <button id="close-modal" class="absolute top-4 right-4 z-50 text-white text-2xl">
+                <i class="fas fa-times"></i>
+            </button>
+            <div class="w-full h-64 bg-gray-800">
+                <img src="https://image.tmdb.org/t/p/w1280/1pdfLvkbY9ohJlCjQHXCZ4YgOJ.jpg" alt="Movie" class="w-full h-full object-cover">
+            </div>
+            <div class="p-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-bold">The Witcher</h2>
+                    <button class="text-white heart-animation" onclick="toggleWatchlist(this, 'modal-movie')">
+                        <i class="far fa-heart text-xl"></i>
+                    </button>
+                </div>
+                <div class="flex space-x-4 mb-4">
+                    <span class="text-green-500 font-bold">98% Match</span>
+                    <span>2019</span>
+                    <span>3 Seasons</span>
+                </div>
+                <div class="flex space-x-3 mb-6">
+                    <button class="bg-white text-black px-4 py-2 rounded flex items-center ripple-effect">
+                        <i class="fas fa-play mr-2"></i> Play
+                    </button>
+                    <button class="bg-gray-700 bg-opacity-70 text-white px-4 py-2 rounded flex items-center ripple-effect">
+                        <i class="fas fa-download mr-2"></i> Download
+                    </button>
+                </div>
+                <p class="mb-6">Geralt of Rivia, a solitary monster hunter, struggles to find his place in a world where people often prove more wicked than beasts.</p>
+                <div class="mb-6">
+                    <h3 class="text-lg font-bold mb-2">Cast</h3>
+                    <div class="flex space-x-3 overflow-x-auto pb-2">
+                        <div class="flex-shrink-0 text-center">
+                            <div class="w-16 h-16 rounded-full bg-gray-700 mb-1"></div>
+                            <span class="text-xs">Henry Cavill</span>
+                        </div>
+                        <div class="flex-shrink-0 text-center">
+                            <div class="w-16 h-16 rounded-full bg-gray-700 mb-1"></div>
+                            <span class="text-xs">Anya Chalotra</span>
+                        </div>
+                        <div class="flex-shrink-0 text-center">
+                            <div class="w-16 h-16 rounded-full bg-gray-700 mb-1"></div>
+                            <span class="text-xs">Freya Allan</span>
+                        </div>
+                        <div class="flex-shrink-0 text-center">
+                            <div class="w-16 h-16 rounded-full bg-gray-700 mb-1"></div>
+                            <span class="text-xs">Joey Batey</span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-2">Episodes</h3>
+                    <div class="space-y-4">
+                        <div class="flex">
+                            <div class="w-24 h-16 bg-gray-800 rounded mr-3"></div>
+                            <div>
+                                <h4 class="font-medium">Episode 1: The End's Beginning</h4>
+                                <p class="text-sm text-gray-400">Geralt of Rivia, a mutated monster-hunter for hire, journeys toward his destiny in the town of Blaviken.</p>
+                            </div>
+                        </div>
+                        <div class="flex">
+                            <div class="w-24 h-16 bg-gray-800 rounded mr-3"></div>
+                            <div>
+                                <h4 class="font-medium">Episode 2: Four Marks</h4>
+                                <p class="text-sm text-gray-400">Geralt hunts a devil menacing a small town; Yennefer is born-again amidst the Battle of Sodden.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Overlay -->
+    <div id="search-overlay" class="fixed inset-0 z-50 search-overlay hidden animate-fadeIn overflow-y-auto pt-16">
+        <div class="p-4">
+            <div class="relative mb-6">
+                <input type="text" placeholder="Search for movies, TV shows..." 
+                       class="w-full bg-gray-800 text-white px-4 py-3 rounded focus:outline-none"
+                       id="search-input">
+                <button class="absolute right-3 top-3 text-gray-400">
+                    <i class="fas fa-search"></i>
+                </button>
+            </div>
+            
+            <h2 class="text-lg font-bold mb-3">Popular Searches</h2>
+            <div class="space-y-3">
+                <div class="flex items-center p-2 bg-gray-800 rounded">
+                    <div class="w-12 h-16 bg-gray-700 rounded mr-3"></div>
+                    <span>Stranger Things</span>
+                </div>
+                <div class="flex items-center p-2 bg-gray-800 rounded">
+                    <div class="w-12 h-16 bg-gray-700 rounded mr-3"></div>
+                    <span>The Witcher</span>
+                </div>
+                <div class="flex items-center p-2 bg-gray-800 rounded">
+                    <div class="w-12 h-16 bg-gray-700 rounded mr-3"></div>
+                    <span>Money Heist</span>
+                </div>
+                <div class="flex items-center p-2 bg-gray-800 rounded">
+                    <div class="w-12 h-16 bg-gray-700 rounded mr-3"></div>
+                    <span>Breaking Bad</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Watchlist functionality with localStorage
+        function toggleWatchlist(button, movieId) {
+            const icon = button.querySelector('i');
+            icon.classList.toggle('far');
+            icon.classList.toggle('fas');
+            icon.classList.toggle('active');
+            
+            // Save to localStorage
+            let watchlist = JSON.parse(localStorage.getItem('watchlist')) || {};
+            watchlist[movieId] = !watchlist[movieId];
+            localStorage.setItem('watchlist', JSON.stringify(watchlist));
+            
+            // Add animation
+            button.classList.add('animate-pulse');
+            setTimeout(() => {
+                button.classList.remove('animate-pulse');
+            }, 300);
+        }
+        
+        // Initialize watchlist buttons from localStorage
+        document.addEventListener('DOMContentLoaded', () => {
+            const watchlist = JSON.parse(localStorage.getItem('watchlist')) || {};
+            Object.keys(watchlist).forEach(movieId => {
+                if (watchlist[movieId]) {
+                    const button = document.querySelector(`[onclick*="${movieId}"]`);
+                    if (button) {
+                        const icon = button.querySelector('i');
+                        icon.classList.replace('far', 'fas');
+                        icon.classList.add('active');
+                    }
+                }
+            });
+        });
+        
+        // Modal functionality
+        const modal = document.getElementById('movie-modal');
+        const closeModal = document.getElementById('close-modal');
+        const infoButtons = document.querySelectorAll('[class*="fa-info-circle"]');
+        
+        infoButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                modal.classList.remove('hidden');
+                document.body.style.overflow = 'hidden';
+            });
+        });
+        
+        closeModal.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        });
+        
+        // Search functionality
+        const searchBtn = document.getElementById('search-btn');
+        const searchOverlay = document.getElementById('search-overlay');
+        const searchInput = document.getElementById('search-input');
+        
+        searchBtn.addEventListener('click', () => {
+            searchOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            setTimeout(() => searchInput.focus(), 300);
+        });
+        
+        searchOverlay.addEventListener('click', (e) => {
+            if (e.target === searchOverlay) {
+                searchOverlay.classList.add('hidden');
+                document.body.style.overflow = 'auto';
+            }
+        });
+        
+        // Navigation active state
+        const navItems = document.querySelectorAll('nav a');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                navItems.forEach(nav => nav.classList.remove('nav-active', 'text-white'));
+                navItems.forEach(nav => nav.classList.add('text-gray-400'));
+                item.classList.add('nav-active', 'text-white');
+                item.classList.remove('text-gray-400');
+            });
+        });
+        
+        // Ripple effect for buttons
+        document.querySelectorAll('.ripple-effect').forEach(button => {
+            button.addEventListener('click', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple';
+                ripple.style.left = `${x}px`;
+                ripple.style.top = `${y}px`;
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+        
+        // Horizontal scroll with touch support
+        const sliders = document.querySelectorAll('.content-slider');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+        
+        sliders.forEach(slider => {
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                slider.classList.add('active');
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.remove('active');
+            });
+            
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.remove('active');
+            });
+            
+            slider.addEventListener('mousemove', (e) => {
+                if(!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2;
+                slider.scrollLeft = scrollLeft - walk;
+            });
+            
+            // Touch events for mobile
+            slider.addEventListener('touchstart', (e) => {
+                isDown = true;
+                startX = e.touches[0].pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+            
+            slider.addEventListener('touchend', () => {
+                isDown = false;
+            });
+            
+            slider.addEventListener('touchmove', (e) => {
+                if(!isDown) return;
+                const x = e.touches[0].pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2;
+                slider.scrollLeft = scrollLeft - walk;
+            });
+        });
+    </script>
+</body>
+</html>
